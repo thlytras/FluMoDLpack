@@ -9,16 +9,12 @@ start_date <- "2013-5-27"
 # End date for analysis: if NA, the current date will be used
 end_date <- NA
 
+# Input/output directories (should you need to change them)
+input_dir <- "./input"
+output_dir <- "./output"
 
 
 # **** FluMoDL-specific options ****
-
-# Number of Monte-Carlo iterations to calculate attributable mortality 95%CIs,
-# for weekly and seasonal mortality estimates.
-# Increase if you have a faster computer (or if you like waiting). 
-# Set to 0 if you're not interested in 95%CIs.
-mcIter_weekly <- 5000
-mcIter_seasonal <- 5000
 
 # For which period to calculate WEEKLY influenza-attributable mortality estimates?
 # Can be one of the following:
@@ -28,6 +24,20 @@ mcIter_seasonal <- 5000
 # -- the string "all", to calculate for ALL available weeks in the data (can take a long time)
 # -- NULL, to not calculate any weekly influenza-attributable mortality estimates
 week_period <- "current"
+
+# Number of Monte-Carlo iterations to calculate attributable mortality 95%CIs,
+# for weekly and seasonal mortality estimates.
+# Increase if you have a faster computer (or if you like waiting). 
+# Set to 0 if you're not interested in 95%CIs.
+mcIter_weekly <- 5000
+mcIter_seasonal <- 5000
+
+# Save Monte-Carlo samples for weekly attributable mortalities?
+# This is useful to combine attributable mortality estimates (with other countries,
+# or in different periods for the same country) and calculate new 95% CIs
+# This file can get very large if there are many weeks or lots of iterations,
+# thus default is FALSE.
+mcsamples_save <- FALSE
 
 
 

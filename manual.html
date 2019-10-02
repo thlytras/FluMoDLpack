@@ -365,8 +365,8 @@ summary {
 </div>
 
 
-<div id="flumodlpack-version-0.0.1" class="section level2">
-<h2>FluMoDLpack version 0.0.1</h2>
+<div id="flumodlpack-version-0.1" class="section level2">
+<h2>FluMoDLpack version 0.1</h2>
 </div>
 <div id="overview" class="section level2">
 <h2>Overview</h2>
@@ -391,9 +391,51 @@ summary {
 <li><p>A file named <code>weekly.RData</code>, containing your weekly ILI and virological data. This file should contain a data.frame named <code>weekly</code>; this should include a column named <code>yearweek</code> (integer, in YYYYWW format), and <em>either</em> columns named <code>ILI</code>, <code>ppH1</code>, <code>ppH3</code> and <code>ppB</code> (with the ILI rate and percentages positive to H1N1, H3N2 and B) <em>or</em> columns named <code>proxyH1</code>, <code>proxyH3</code> and <code>proxyB</code> (if you want to specify your proxies yourself).</p></li>
 </ul>
 </div>
+<div id="how-exactly-do-you-set-up-and-update-the-weather-data" class="section level3">
+<h3>How exactly do you set up and update the weather data?</h3>
+<p>You set the required options inall <code>options.R</code>, and then you run the <code>update_weather.R</code> script. The most important option is <code>course_of_action</code>, which can take values from 1 to 4. There are essentially three options:</p>
+<ol style="list-style-type: decimal">
+<li><p>You can directly use the EuroMOMO weather data available in <a href="http://www.euromomo.eu/methods/weather/weather.php" class="uri">http://www.euromomo.eu/methods/weather/weather.php</a>. Download your respective .txt file, place it in <code>/input</code>, and set <code>course_of_action &lt;- 1</code> in <code>options.R</code> The 2-letter NUTS code in the file name must match what you’ve set in option <code>country_code</code> in the <code>options.R</code> file.</p></li>
+<li><p>You can have the script automatically download the appropriate NOAA data for your region. By setting <code>course_of_action &lt;- 2</code>, the script downloads all the weather station data from NOAA for your region and for the appropriate years, and saves those to <code>/input/temp_all.RData</code>. If you set <code>course_of_action &lt;- 3</code>, then any weather data previously saved in <code>/input/temp_all.RData</code> are kept, and only the data for the last year are downloaded from NOAA (or last two years, if we’re between January and March); this saves time, and keeps any previously downloaded data from being deleted if NOAA drops some past records due to QA issues (has happened in the past).</p></li>
+</ol>
+<p>In both cases (EuroMOMO data or freshly-downloaded NOAA data), aggregation is automatically done by NUTS3 region, and the information in <code>/input/europe_map.RData</code> (see below for details) is used for that purpose. The NUTS3 region that corresponds to each weather station is identified, the mean daily temperature for each NUTS3 region is calculated, and then a population-weighted mean over all NUTS3 regions is calculated. In the end, the mean daily temperatures are written in the file <code>/input/mdTemp.RData</code>, which is the input file used by the main script (<code>FluMoDLmaster.R</code>). This file contains a data.frame named <code>mdTemp</code>, with two columns: <code>date</code> (of class <code>Date</code>) and <code>temp</code> (numeric).</p>
+<ol start="3" style="list-style-type: decimal">
+<li>If you want to use another data source (not NOAA) or some other way to aggregate or otherwise handle your weather data, you can write your own custom script and have it called via <code>update_weather.R</code>. Go to <code>options.R</code>, set <code>course_of_action &lt;- 4</code> and give the full pathname of your script to the <code>custom_script</code> option. Your script should produce as output the file <code>/input/mdTemp.RData</code> exactly as described above.</li>
+</ol>
+</div>
+<div id="what-does-the-flumodlmaster.r-script-do" class="section level3">
+<h3>What does the <code>FluMoDLmaster.R</code> script do?</h3>
+<p>It reads in all the input, and fits the FluMoDL both overall (for all ages) and by age group: &gt;=65 years, 15-64 years, 5-14 years and 0-4 years. The age groups are the same as in EuroMOMO, and are not configurable in this version of FluMoDLpack.</p>
+<p>Subsequently the script calculates influenza- and temperature- attributable mortality aggregated by season, and optionally by week. This depends on the option <code>week_period</code> in <code>options.R</code>. This can take one of the following values:</p>
+<ul>
+<li><p>A vector of start and end weeks, in YYYWW format, to specifically select a range for which weekly attributable mortalities should be calculated.</p></li>
+<li><p>A year indicating a single influenza season, e.g. 2014, which will calculate weekly mortalities between week 201440 and 201520.</p></li>
+<li><p>The string “current”, to select the current influenza season</p></li>
+<li><p>The string “all”, to calculate weekly attributable mortalities for ALL weeks included in the data. Note that this can take a long time.</p></li>
+<li><p><code>NULL</code> to not calculate any weekly attributable mortalities.</p></li>
+</ul>
+</div>
 <div id="what-output-does-flumodlpack-create" class="section level3">
 <h3>What output does FluMoDLpack create?</h3>
-<p>[To be added]</p>
+<p>The script writes in <code>/output</code>, creating a sub-directory named <code>FluMoDL-X-Y-Z</code> where X is your NUTS code, Y is the FluMoDLpack version and Z is the current date (in YYYYMMDD format).</p>
+<p>Inside this sub-directory, the following output is created:</p>
+<ul>
+<li><p>A file <code>models.RData</code> holding the fitted FluMoDLs. This contains a list (named <code>models</code>) of <code>FluMoDL</code>-class objects, overall and by age group. Note that objects of class <code>FluMoDL</code> include all your input data, and thus <em>should NOT be shared</em> with other parties if your data are confidential.</p></li>
+<li><p>A file <code>summaries.RData</code> containing a list of FluMoDL summaries (of class <code>summary.FluMoDL</code>), overall and by age group. Note that these objects do not contain any of your data, just regression coefficients for the influenza activity proxies, and thus <em>can be freely shared</em>, in order e.g. to run a multivariate meta-analysis and calculate BLUP estimates.</p></li>
+<li><p>A file <code>attrMort.RData</code> containing attributable mortalities (to influenza and cold temperatures) both per season (data.frame <code>attrMort_seasonal</code>) and, if requested, per week (data.frame <code>attrMort_weekly</code>).</p></li>
+<li><p>A PDF file <code>assoc-flu.pdf</code> illustrating the overall influenza-mortality associations by activity proxy, overall and by age groups. Note that the individual plots from this small report can also be found inside a <code>figures</code> directory in the output sub-directory, in both PNG and PDF format. Also note that the information to build these exact plots is precisely what the file <code>summaries.RData</code> contains (and nothing else).</p></li>
+<li><p>A PDF file <code>assoc-temp.pdf</code> illustrating the temperature-mortality associations, overall and by age groups. The indivitual plots from this report can also be found in the <code>figures</code> sub-directory</p></li>
+<li><p>A file named <code>mcsamples_weekly.RData</code>, created only if option <code>mcsamples_save</code> in <code>options.R</code> is <code>TRUE</code>, and containing the Monte-Carlo samples for the weekly attributable mortality estimates. The primary use for this file is for pooling influenza-attributable mortality estimates from different countries into Europe-wide estimates, with 95% CIs included. Therefore, the default for <code>mcsamples_save</code> is currently <code>FALSE</code>.</p></li>
+</ul>
+</div>
+<div id="todo" class="section level3">
+<h3>TODO</h3>
+<ul>
+<li><p>Add capability to handle multiple sub-regions and pool the results via multivariate meta-analysis.</p></li>
+<li><p>Add plots illustrating attributable mortality estimates, by season and by week.</p></li>
+<li><p>Maybe expand the produced output? (Ideas welcome).</p></li>
+<li><p>…</p></li>
+</ul>
 </div>
 </div>
 

@@ -9,13 +9,13 @@ source("options.R")
 # Load the deaths file. 
 # Adapt as needed if you have some other way of providing the deaths file.
 # See manual for details.
-load("input/deaths.RData")
+load(sprintf("%s/deaths.RData", input_dir))
 
 
 # Load the weekly ILI & virological file. 
 # Adapt as needed if you have some other way of providing these data.
 # See manual for details.
-load("input/weekly.RData")
+load(sprintf("%s/weekly.RData", input_dir))
 
 
 # **** NO MODIFICATION BELOW THIS LINE ****
@@ -23,14 +23,14 @@ load("input/weekly.RData")
 cat("Loading packages...\n")
 library(FluMoDL)
 cat("\n")
-load("input/mdTemp.RData")
+load(sprintf("%s/mdTemp.RData", input_dir))
 
 daily <- mdTemp; rm(mdTemp)
 daily <- subset(daily, date>=start_date)
 ageGroups <- c("All","65","1564","0514","04")
 ageGroupsLab <- c("All" = "All ages", "65" = ">=65 years", "1564" = "15-64 years", "0514" = "5-14 years", "04" = "0-4 years")
 
-load("input/weekly.RData")
+load(sprintf("%s/weekly.RData", input_dir))
 if (!("proxyH1" %in% names(weekly))) weekly$proxyH1 <- with(weekly, ILI*ppH1)
 if (!("proxyH3" %in% names(weekly))) weekly$proxyH3 <- with(weekly, ILI*ppH3)
 if (!("proxyB" %in% names(weekly))) weekly$proxyB <- with(weekly, ILI*ppB)
@@ -72,7 +72,7 @@ names(models) <- ageGroups
 
 
 cat("Setting up output directories...\n")
-outdir <- sprintf("output/FluMoDL-%s-0.1-%s", 
+outdir <- sprintf("%s/FluMoDL-%s-0.1-%s", output_dir,
     country_code, format(Sys.time(), "%Y%m%d"))
 suppressWarnings(dir.create(outdir))
 suppressWarnings(dir.create(sprintf("%s/figures", outdir)))
@@ -210,39 +210,12 @@ cat("\nCalculating weekly estimates as requested...\n")
   }
 
   save(attrMort_weekly, attrMort_seasonal, file=sprintf("%s/attrMort.RData", outdir))
-  save(mcsamples_weekly, file=sprintf("%s/mcsamples_weekly.RData", outdir))
+  if (mcsamples_save) {
+    save(mcsamples_weekly, file=sprintf("%s/mcsamples_weekly.RData", outdir))
+  }
 } else {
   save(attrMort_seasonal, file=sprintf("%s/attrMort.RData", outdir))
 } 
 
 
 
-
-
-
-# cat("\nNow plotting output...\n")
-# 
-# library(plotrix)
-# 
-# plotYrFluDeaths <- function(family="Fira Sans") {
-#   par(family=family)
-#   ylim <- range(pretty(range(attrMort_seasonal$All[,c("AllFlu","AllFlu.lo","AllFlu.hi")])))  
-#   ps <- barplot(rbind(attrMort_seasonal$All$AllFlu, labConfDeaths),
-#     ylim=ylim, xlab="Περίοδος επιτήρησης γρίπης",
-#     border="white", col=c("purple","orange"),
-#     ylab="Αριθμός θανάτων", beside=TRUE,
-#     names.arg=rep(NA,length(labConfDeaths)))
-# 
-#   legend("topright", c("Εκτιμώμενοι θάνατοι αποδιδόμενοι στη γρίπη", "Καταγεγραμμένοι θάνατοι με εργαστηριακά επιβεβαίωμένη γρίπη"),
-#     bty="n", border=NA, fill=c("purple","orange"), xpd=TRUE, inset=c(0,-0.2))
-#   
-#   with(attrMort_seasonal$All, plotCI(x=ps[1,], y=AllFlu, 
-#       li=AllFlu.lo, ui=AllFlu.hi, add=TRUE, cex=0.0001, col="magenta", lwd=2))
-#   # Annotate with number of deaths
-#   text(x=ps[2,], y=labConfDeaths+diff(ylim)/40, labConfDeaths, cex=0.9)
-#   text(x=ps[1,]+diff(ps[,1])/2.5, y=attrMort_seasonal$All$AllFlu+diff(ylim)/40, 
-#     attrMort_seasonal$All$AllFlu, cex=0.9)
-#   
-#   axis(1, at=(ps[2,]+ps[1,])/2, sprintf("%s-%02d", names(labConfDeaths),
-#     as.integer(names(labConfDeaths))%%100+1), lwd=0, font=2, cex.axis=1)
-# }
