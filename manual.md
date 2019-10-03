@@ -20,7 +20,8 @@ within the context of the [EuroMOMO network](http://www.euromomo.eu/).
 FluMoDLpack is a set of R scripts that implements a standard set of analyses
 of influenza-attributable mortality using FluMoDL. It relies on the 
 [FluMoDL R package](https://cran.r-project.org/package=FluMoDL) to do the 
-actual model fitting and analysis.
+actual model fitting and analysis. Therefore, you need to have R packages 
+`FluMoDL` and `plotrix` installed. 
 
 The objective of FluMoDLpack is to facilitate the analyses and standardize the
 output, so that EuroMOMO network members have a common frame of reference and 
@@ -104,8 +105,8 @@ if we're between January and March); this saves time, and keeps any previously
 downloaded data from being deleted if NOAA drops some past records due to QA
 issues (has happened in the past).
 
-In both cases (EuroMOMO data or freshly-downloaded NOAA data), aggregation is
-automatically done by NUTS3 region, and the information in 
+   In both cases (EuroMOMO data or freshly-downloaded NOAA data), aggregation 
+is automatically done by NUTS3 region, and the information in 
 `/input/europe_map.RData` (see below for details) is used for that purpose.
 The NUTS3 region that corresponds to each weather station is identified, the 
 mean daily temperature for each NUTS3 region is calculated, and then a 
@@ -150,7 +151,6 @@ included in the data. Note that this can take a long time.
 
 
 
-
 ### What output does FluMoDLpack create?
 
 The script writes in `/output`, creating a sub-directory named `FluMoDL-X-Y-Z` 
@@ -182,8 +182,16 @@ that the information to build these exact plots is precisely what the file
 `summaries.RData` contains (and nothing else).
 
 * A PDF file `assoc-temp.pdf` illustrating the temperature-mortality 
-associations, overall and by age groups. The indivitual plots from this report
-can also be found in the `figures` sub-directory
+associations, overall and by age groups. The individual plots from this 
+report can also be found in the `figures` sub-directory
+
+* A PDF file `attrMort-seasonal.pdf` containing influenza-attributable mortality
+estimates by season, overall and by age groups. The individual plots from this 
+report can also be found in the `figures` sub-directory
+
+* A PDF file `attrMort-weekly.pdf` containing influenza-attributable mortality
+estimates by week, overall and by age groups. The individual plots from this 
+report can also be found in the `figures` sub-directory
 
 * A file named `mcsamples_weekly.RData`, created only if option `mcsamples_save`
 in `options.R` is `TRUE`, and containing the Monte-Carlo samples for the weekly
@@ -193,13 +201,13 @@ into Europe-wide estimates, with 95% CIs included.
 Therefore, the default for `mcsamples_save` is currently `FALSE`.
 
 
+
 ### TODO
 
 * Add capability to handle multiple sub-regions and pool the results via 
 multivariate meta-analysis. 
 
-* Add plots illustrating attributable mortality estimates, by season and by week.
-
-* Maybe expand the produced output? (Ideas welcome).
+* Maybe expand the produced output? (Ideas very welcome).
 
 * ...
+
